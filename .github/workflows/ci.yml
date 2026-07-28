@@ -1,0 +1,208 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  npm-provenance-dry-run:
+    name: npm provenance publication dry-run
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.19.0"
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci --include=dev --ignore-scripts
+      - run: npm run build
+      - name: Rehearse public package and provenance generation without uploading
+        run: |
+          node -e 'const fs = require("node:fs"); const pkg = JSON.parse(fs.readFileSync("package.json", "utf8")); pkg.private = false; fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")'
+          npm publish --dry-run --provenance --access public --ignore-scripts
+
+  verify:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22.19.0", "24.x"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci --include=dev --ignore-scripts
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run safety:scan
+      - run: npm run build
+      - run: npm run safety:artifacts
+      - run: npm run safety:package
+      - run: npm run audit:ci
+
+  native-templates:
+    name: Native deployment template validation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.19.0"
+          cache: npm
+      - run: npm ci --include=dev --ignore-scripts
+      - run: sudo apt-get update && sudo apt-get install -y nginx-light openssl
+      - run: npx tsx scripts/fetch-oauth2-proxy.ts "$RUNNER_TEMP/oauth2-proxy"
+      - run: npm run test:templates:native
+        env:
+          NGINX_BIN: /usr/sbin/nginx
+          OAUTH2_PROXY_BIN: ${{ runner.temp }}/oauth2-proxy
+
+  acme-staging:
+    name: Disposable ACME staging issuance and renewal
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.19.0"
+          cache: npm
+      - run: npm ci --include=dev --ignore-scripts
+      - run: sudo apt-get update && sudo apt-get install -y nginx-light openssl certbot
+      - run: npx tsx scripts/fetch-pebble.ts "$RUNNER_TEMP/pebble"
+      - run: npm run test:acme-staging
+        env:
+          NGINX_BIN: /usr/sbin/nginx
+          CERTBOT_BIN: /usr/bin/certbot
+          PEBBLE_BIN: ${{ runner.temp }}/pebble
+      - name: Verify distro renewal timer and fixed deploy hook syntax
+        run: |
+          systemctl cat certbot.timer
+          sudo systemctl enable --now certbot.timer
+          test "$(systemctl is-enabled certbot.timer)" = enabled
+          test "$(systemctl is-active certbot.timer)" = active
+          npx tsx -e 'import { writeFileSync } from "node:fs"; import { renderRenewalHook } from "./deployment/service-templates.ts"; writeFileSync(process.env.RUNNER_TEMP + "/pi-together-renewal-hook", renderRenewalHook(), { mode: 0o755 })'
+          /bin/sh -n "$RUNNER_TEMP/pi-together-renewal-hook"
+      - name: Clean disposable ACME fixture
+        if: always()
+        run: sudo systemctl disable --now certbot.timer || true
+
+  full-stack:
+    name: Disposable nginx/oauth2-proxy integration
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.19.0"
+          cache: npm
+      - run: npm ci --include=dev --ignore-scripts
+      - run: sudo apt-get update && sudo apt-get install -y nginx-light openssl iproute2
+      - run: npm run build
+      - run: npm run smoke:isolated-release
+      - run: npx tsx scripts/fetch-oauth2-proxy.ts "$RUNNER_TEMP/oauth2-proxy"
+      - run: npm run test:full-stack
+        env:
+          NGINX_BIN: /usr/sbin/nginx
+          OAUTH2_PROXY_BIN: ${{ runner.temp }}/oauth2-proxy
+      - name: Render exact systemd integration inputs without privilege
+        run: |
+          mkdir -p "$RUNNER_TEMP/s16-workspace"
+          S16_SERVICE_USER="$(id -un)" S16_SERVICE_GROUP="$(id -gn)" S16_WORKSPACE="$RUNNER_TEMP/s16-workspace" \
+            npx tsx scripts/render-systemd-integration.ts "$RUNNER_TEMP/s16-systemd"
+      - name: Install disposable fixed-path systemd fixture
+        run: |
+          sudo install -d -m 0755 /opt/pi-together/releases
+          sudo cp -a --no-preserve=ownership dist /opt/pi-together/releases/0.1.0
+          sudo ln -s /opt/pi-together/releases/0.1.0 /opt/pi-together/current
+          sudo install -d -m 0755 /opt/pi-together/helpers
+          sudo install -m 0755 "$RUNNER_TEMP/oauth2-proxy" /opt/pi-together/helpers/oauth2-proxy
+          sudo install -d -m 0750 -o root -g "$(id -gn)" /etc/pi-together
+          sudo install -m 0600 -o "$(id -un)" -g "$(id -gn)" "$RUNNER_TEMP/s16-systemd/config.json" /etc/pi-together/config.json
+          sudo install -m 0644 "$RUNNER_TEMP/s16-systemd/oauth2-proxy.cfg" /etc/pi-together/oauth2-proxy.cfg
+          sudo install -m 0600 "$RUNNER_TEMP/s16-systemd/oauth-client.secret" /etc/pi-together/oauth-client.secret
+          sudo install -m 0600 "$RUNNER_TEMP/s16-systemd/oauth-cookie.secret" /etc/pi-together/oauth-cookie.secret
+          sudo install -m 0644 "$RUNNER_TEMP/s16-systemd/pi-together.service" /etc/systemd/system/pi-together.service
+          sudo install -d -m 0755 /etc/systemd/system/pi-together.service.d
+          sudo install -m 0644 "$RUNNER_TEMP/s16-systemd/override.conf" /etc/systemd/system/pi-together.service.d/override.conf
+          sudo install -m 0644 "$RUNNER_TEMP/s16-systemd/pi-together-oauth2-proxy.service" /etc/systemd/system/pi-together-oauth2-proxy.service
+          sudo systemctl daemon-reload
+          if ! sudo systemctl start pi-together.service pi-together-oauth2-proxy.service; then
+            sudo systemctl status --no-pager pi-together.service pi-together-oauth2-proxy.service || true
+            sudo journalctl --no-pager -u pi-together.service -u pi-together-oauth2-proxy.service || true
+            exit 1
+          fi
+      - name: Verify service identity, restart policy, socket, private health, and no TCP backend
+        run: |
+          set -euxo pipefail
+          trap 'sudo systemctl status --no-pager pi-together.service pi-together-oauth2-proxy.service || true; sudo journalctl --no-pager -n 100 -u pi-together.service -u pi-together-oauth2-proxy.service || true' ERR
+          for attempt in $(seq 1 100); do
+            test -S /run/pi-together/app.sock && break
+            sleep 0.1
+          done
+          test -S /run/pi-together/app.sock
+          test "$(stat -c %a /run/pi-together/app.sock)" = 660
+          test "$(stat -c %U /run/pi-together/app.sock)" = "$(id -un)"
+          test "$(stat -c %G /run/pi-together/app.sock)" = "$(id -gn)"
+          test -z "$(ss -H -ltn 'sport = :43117')"
+          curl --fail --silent --unix-socket /run/pi-together/app.sock \
+            -H 'Host: pi.example.com' -H 'X-Pi-Together-Proxy-Secret: ppppppppppppppppppppppppppppppppppppppppppp' \
+            -H 'X-Pi-Together-Login: alice' http://localhost/api/health | grep '"ok":true'
+          oauth_listener="$(ss -H -ltn 'sport = :4180')"
+          echo "$oauth_listener" | grep '127.0.0.1:4180'
+          test -z "$(echo "$oauth_listener" | grep -E '0\.0\.0\.0:4180|\[::\]:4180' || true)"
+          curl --fail --silent http://127.0.0.1:4180/ping
+          oauth_pid="$(systemctl show -p MainPID --value pi-together-oauth2-proxy.service)"
+          test "$oauth_pid" != 0
+          test "$(ps -o user= -p "$oauth_pid" | xargs)" != root
+          first_pid="$(systemctl show -p MainPID --value pi-together.service)"
+          sudo systemctl kill --kill-whom=main --signal=KILL pi-together.service
+          for attempt in $(seq 1 100); do
+            second_pid="$(systemctl show -p MainPID --value pi-together.service)"
+            test "$second_pid" != 0 && test "$second_pid" != "$first_pid" && break
+            sleep 0.1
+          done
+          test "$second_pid" != 0
+          test "$second_pid" != "$first_pid"
+          test "$(systemctl show -p ActiveState --value pi-together.service)" = active
+          test "$(systemctl show -p User --value pi-together.service)" = "$(id -un)"
+      - name: Clean disposable systemd fixture
+        if: always()
+        run: |
+          sudo systemctl disable --now pi-together.service pi-together-oauth2-proxy.service || true
+          sudo rm -rf /etc/systemd/system/pi-together.service /etc/systemd/system/pi-together.service.d /etc/systemd/system/pi-together-oauth2-proxy.service /etc/pi-together /opt/pi-together /run/pi-together
+          sudo systemctl daemon-reload
+
+  secret-scanners:
+    name: Pinned Gitleaks and TruffleHog filesystem scan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.19.0"
+          cache: npm
+      - run: npm ci --include=dev --ignore-scripts
+      - run: npm run safety:secrets
+
+  e2e:
+    name: Browser E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.19.0"
+          cache: npm
+      - run: npm ci --include=dev --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

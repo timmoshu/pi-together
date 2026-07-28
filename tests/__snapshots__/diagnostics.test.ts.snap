@@ -1,0 +1,230 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`operational diagnostics > keeps the complete failure/remediation catalog stable > doctor failure catalog 1`] = `
+[
+  {
+    "code": "PTD-CONFIG",
+    "remediation": "Re-run setup after correcting config ownership, mode, or schema.",
+    "status": "fail",
+    "summary": "Configuration is missing, unsafe, or invalid.",
+  },
+  {
+    "code": "PTD-RELEASE",
+    "remediation": "Reinstall the exact signed release before starting services.",
+    "status": "fail",
+    "summary": "Installed release integrity could not be verified.",
+  },
+  {
+    "code": "PTD-PI-VERSION",
+    "remediation": "Install a Pi version in the supported range >=0.82.0 <0.83.0.",
+    "status": "fail",
+    "summary": "Installed Pi version is unsupported or invalid.",
+  },
+  {
+    "code": "PTD-PI-MODELS",
+    "remediation": "Configure at least one Pi model and rerun doctor.",
+    "status": "fail",
+    "summary": "Pi reported no model entries.",
+  },
+  {
+    "code": "PTD-WORKSPACES",
+    "remediation": "Restore each configured canonical shared repository folder and invoking-user ownership.",
+    "status": "fail",
+    "summary": "One or more shared repository folders are unavailable or wrongly owned.",
+  },
+  {
+    "code": "PTD-IDENTITY",
+    "remediation": "Re-run setup to refresh and reconcile GitHub numeric principal mappings.",
+    "status": "fail",
+    "summary": "A GitHub mapping is stale, unavailable, or no longer matches its numeric subject.",
+  },
+  {
+    "code": "PTD-DNS",
+    "remediation": "Point the public domain at this host, wait for propagation, then rerun doctor.",
+    "status": "fail",
+    "summary": "Public domain does not resolve.",
+  },
+  {
+    "code": "PTD-LISTENER",
+    "remediation": "Start the app on its configured private socket or literal loopback listener.",
+    "status": "fail",
+    "summary": "Configured private listener is unavailable or unsafe.",
+  },
+  {
+    "code": "PTD-PORTS",
+    "remediation": "Restore nginx on ports 80/443 and keep oauth2-proxy on literal loopback only.",
+    "status": "fail",
+    "summary": "Required ports are missing or oauth2-proxy is broadly bound.",
+  },
+  {
+    "code": "PTD-SERVICES",
+    "remediation": "Inspect the named owned units with pi-together logs and restart only after correction.",
+    "status": "fail",
+    "summary": "One or more owned service dependencies are inactive.",
+  },
+  {
+    "code": "PTD-PROCESS-USERS",
+    "remediation": "Restart owned services from the generated units and ensure neither runs as root.",
+    "status": "fail",
+    "summary": "An owned application process is missing or running as root.",
+  },
+  {
+    "code": "PTD-CERTIFICATE",
+    "remediation": "Renew or reissue the domain certificate before exposing the service.",
+    "status": "fail",
+    "summary": "Certificate is missing, untrusted, mismatched, or expires within 30 days.",
+  },
+  {
+    "code": "PTD-RENEWAL",
+    "remediation": "Enable and start certbot.timer and validate the Pi Together deploy hook.",
+    "status": "fail",
+    "summary": "Certbot renewal timer is not enabled and active.",
+  },
+  {
+    "code": "PTD-PRIVATE-HEALTH",
+    "remediation": "Restore the private app listener and configuration before public activation.",
+    "status": "fail",
+    "summary": "Authenticated private health check failed.",
+  },
+  {
+    "code": "PTD-PUBLIC-REDIRECT",
+    "remediation": "Verify nginx/oauth2-proxy routing and the configured OAuth callback URL.",
+    "status": "fail",
+    "summary": "Public OAuth redirect shape is invalid.",
+  },
+]
+`;
+
+exports[`operational diagnostics > renders stable healthy human and JSON doctor output > healthy doctor JSON 1`] = `
+{
+  "checks": [
+    {
+      "code": "PTD-CONFIG",
+      "status": "pass",
+      "summary": "Configuration schema and mode-0600 ownership verified.",
+    },
+    {
+      "code": "PTD-RELEASE",
+      "status": "pass",
+      "summary": "Release 0.1.0 integrity verified.",
+    },
+    {
+      "code": "PTD-PI-VERSION",
+      "status": "pass",
+      "summary": "Pi 0.82.0 is supported.",
+    },
+    {
+      "code": "PTD-PI-MODELS",
+      "status": "pass",
+      "summary": "Pi reports at least one offline model entry.",
+    },
+    {
+      "code": "PTD-WORKSPACES",
+      "status": "pass",
+      "summary": "1 shared repository folder(s) verified.",
+    },
+    {
+      "code": "PTD-IDENTITY",
+      "status": "pass",
+      "summary": "Due GitHub numeric principal mappings were refreshed and unchanged.",
+    },
+    {
+      "code": "PTD-DNS",
+      "status": "pass",
+      "summary": "Public domain resolves.",
+    },
+    {
+      "code": "PTD-LISTENER",
+      "status": "pass",
+      "summary": "Private listener boundary is active.",
+    },
+    {
+      "code": "PTD-PORTS",
+      "status": "pass",
+      "summary": "Required ports are active without a broad oauth2-proxy bind.",
+    },
+    {
+      "code": "PTD-SERVICES",
+      "status": "pass",
+      "summary": "Owned service dependencies are active.",
+    },
+    {
+      "code": "PTD-PROCESS-USERS",
+      "status": "pass",
+      "summary": "Application and OAuth processes are non-root.",
+    },
+    {
+      "code": "PTD-CERTIFICATE",
+      "status": "pass",
+      "summary": "Public certificate chain, hostname, and 30-day validity verified.",
+    },
+    {
+      "code": "PTD-RENEWAL",
+      "status": "pass",
+      "summary": "Certbot renewal timer is enabled and active.",
+    },
+    {
+      "code": "PTD-PRIVATE-HEALTH",
+      "status": "pass",
+      "summary": "Authenticated private health check passed.",
+    },
+    {
+      "code": "PTD-PUBLIC-REDIRECT",
+      "status": "pass",
+      "summary": "Public OAuth start and callback redirect shape verified.",
+    },
+  ],
+  "overall": "pass",
+  "schemaVersion": 1,
+}
+`;
+
+exports[`operational diagnostics > renders stable healthy human and JSON doctor output > healthy doctor human 1`] = `
+"Pi Together doctor: PASS
+PASS  PTD-CONFIG  Configuration schema and mode-0600 ownership verified.
+PASS  PTD-RELEASE  Release 0.1.0 integrity verified.
+PASS  PTD-PI-VERSION  Pi 0.82.0 is supported.
+PASS  PTD-PI-MODELS  Pi reports at least one offline model entry.
+PASS  PTD-WORKSPACES  1 shared repository folder(s) verified.
+PASS  PTD-IDENTITY  Due GitHub numeric principal mappings were refreshed and unchanged.
+PASS  PTD-DNS  Public domain resolves.
+PASS  PTD-LISTENER  Private listener boundary is active.
+PASS  PTD-PORTS  Required ports are active without a broad oauth2-proxy bind.
+PASS  PTD-SERVICES  Owned service dependencies are active.
+PASS  PTD-PROCESS-USERS  Application and OAuth processes are non-root.
+PASS  PTD-CERTIFICATE  Public certificate chain, hostname, and 30-day validity verified.
+PASS  PTD-RENEWAL  Certbot renewal timer is enabled and active.
+PASS  PTD-PRIVATE-HEALTH  Authenticated private health check passed.
+PASS  PTD-PUBLIC-REDIRECT  Public OAuth start and callback redirect shape verified."
+`;
+
+exports[`operational diagnostics > reports installed/current/previous versions and owned service states > status JSON 1`] = `
+{
+  "currentVersion": "0.1.0",
+  "installed": true,
+  "previousVersion": "0.0.9",
+  "schemaVersion": 1,
+  "services": {
+    "app": "active",
+    "certbotTimer": "active",
+    "funnel": "active",
+    "funnelEdge": "active",
+    "nginx": "active",
+    "oauth2Proxy": "active",
+    "tailscaled": "active",
+  },
+  "workspaces": {
+    "configuredFolders": 1,
+    "discoveredRepositories": null,
+    "truncated": null,
+  },
+}
+`;
+
+exports[`operational diagnostics > reports installed/current/previous versions and owned service states > status human 1`] = `
+"Pi Together: installed
+Current version: 0.1.0
+Previous version: 0.0.9
+Shared repositories: folders=1 repositories=unknown
+Services: app=active oauth2-proxy=active nginx=active certbot=active edge=active funnel=active tailscaled=active"
+`;

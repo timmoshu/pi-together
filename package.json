@@ -1,0 +1,122 @@
+{
+  "name": "pi-together",
+  "version": "0.1.0",
+  "private": false,
+  "license": "MIT",
+  "description": "An independent Pi companion for trusted, self-hosted browser collaboration on native coding-agent sessions.",
+  "keywords": [
+    "pi",
+    "coding-agent",
+    "collaboration",
+    "self-hosted"
+  ],
+  "homepage": "https://github.com/timmoshu/pi-together#readme",
+  "bugs": {
+    "url": "https://github.com/timmoshu/pi-together/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timmoshu/pi-together.git"
+  },
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "type": "module",
+  "bin": {
+    "pi-together": "dist/cli/pi-together.js"
+  },
+  "exports": {
+    "./manifest": "./dist/release/manifest.json"
+  },
+  "files": [
+    "dist/client",
+    "dist/server/index.js",
+    "dist/extension",
+    "dist/cli/pi-together.js",
+    "dist/privileged/apply.js",
+    "dist/release",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "SUPPORT.md",
+    "docs/architecture.md",
+    "docs/deployment-security.md",
+    "docs/licensing.md",
+    "docs/operations.md",
+    "docs/privacy.md",
+    "docs/threat-model.md"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "piCompatibility": ">=0.82.0 <0.83.0",
+  "scripts": {
+    "dev": "tsx watch server/index.ts",
+    "dev:client": "vite",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && npm run build:client && npm run build:server && npm run build:extension && npm run build:cli && npm run build:privileged && npm run build:release",
+    "build:client": "vite build",
+    "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --outfile=dist/server/index.js --sourcemap",
+    "build:extension": "tsx scripts/build-attribution-extension.ts",
+    "build:cli": "tsx scripts/build-cli.ts",
+    "build:privileged": "tsx scripts/build-privileged.ts",
+    "build:release": "tsx scripts/build-release-metadata.ts",
+    "build:release-bundle": "npm run build && tsx scripts/build-release-bundle.ts",
+    "verify:release-bundle": "tsx scripts/verify-release-bundle.ts",
+    "release:preflight": "tsx scripts/release-preflight.ts",
+    "export:public": "tsx scripts/export-public-tree.ts",
+    "prepack": "npm run build",
+    "start": "node dist/server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:templates:native": "tsx scripts/native-template-validation.ts",
+    "test:full-stack": "tsx scripts/full-stack-integration.ts",
+    "test:acme-staging": "tsx scripts/acme-staging-integration.ts",
+    "test:package": "tsx scripts/package-contract.ts",
+    "audit:ci": "npm audit --include=dev --audit-level=high && npm audit --omit=dev --audit-level=high",
+    "safety:scan": "tsx scripts/repository-safety.ts",
+    "safety:secrets": "tsx scripts/secret-scanners.ts",
+    "safety:artifacts": "tsx scripts/repository-safety.ts dist",
+    "safety:package": "tsx scripts/package-safety.ts",
+    "smoke:pi": "tsx scripts/production-smoke.ts",
+    "smoke:production": "tsx scripts/production-smoke.ts",
+    "smoke:isolated-release": "tsx scripts/isolated-release-smoke.ts",
+    "smoke:eaddr": "tsx scripts/eaddr-smoke.ts",
+    "smoke:runtime": "tsx scripts/smoke-runtime.ts",
+    "smoke:attribution": "tsx scripts/smoke-attribution.ts"
+  },
+  "dependencies": {
+    "@inquirer/checkbox": "^5.2.1",
+    "@inquirer/confirm": "^6.1.1",
+    "@inquirer/input": "^5.1.2",
+    "@inquirer/password": "^5.1.1",
+    "@inquirer/select": "^5.2.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@fontsource-variable/instrument-sans": "^5.3.0",
+    "@fontsource-variable/newsreader": "^5.3.0",
+    "@playwright/test": "^1.61.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^6.0.4",
+    "esbuild": "^0.28.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-markdown": "9.0.1",
+    "remark-gfm": "4.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  }
+}

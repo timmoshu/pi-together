@@ -1,0 +1,23 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`typed setup operation plan > builds a versioned deterministic local plan with hashes, preconditions, and rollback metadata > local redacted operation plan 1`] = `
+"Plan f5a69245abe0956663a2f8986503815de8cb719ffa299ed5b6bb2156c2eb7f8c
+Target: debian 12 x64 (local)
+Preconditions: 15; operations: 13
+
+config-directory: ensure-directory /etc/pi-together
+runtime-directory: ensure-directory /run/pi-together
+state-directory: ensure-directory /var/lib/pi-together
+install-directory: ensure-directory /opt/pi-together
+release-directory: ensure-directory /opt/pi-together/releases
+backup-root-directory: ensure-directory /var/lib/pi-together/backups
+backup-directory: ensure-directory /var/lib/pi-together/backups/setup
+release: copy-release /opt/pi-together/releases/0.1.0
+current-release: symlink /opt/pi-together/current
+app-config: write-file /etc/pi-together/config.json
+app-service: write-file /etc/systemd/system/pi-together.service
+install-manifest: write-file /var/lib/pi-together/install-manifest.json
+app-service-action: service /etc/systemd/system/pi-together.service
+
+No commands have been run and no files, packages, services, or certificates have been changed."
+`;

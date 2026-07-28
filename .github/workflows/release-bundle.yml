@@ -1,0 +1,78 @@
+name: Signed release bundle
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    runs-on: ubuntu-24.04
+    environment: release
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.19.0"
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci --include=dev --ignore-scripts
+      - run: npm run typecheck && npm test && npm run build
+      - name: Build and verify the signed release bundle
+        env:
+          RELEASE_KEY: ${{ secrets.PI_TOGETHER_RELEASE_KEY }}
+        run: |
+          test -n "$RELEASE_KEY"
+          key="$RUNNER_TEMP/pi-together-release-ed25519.pem"
+          printf '%s' "$RELEASE_KEY" > "$key"
+          chmod 0600 "$key"
+          PI_TOGETHER_RELEASE_KEY="$key" \
+          PI_TOGETHER_RELEASE_SOURCE_REF="$GITHUB_REF" \
+          SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
+            npm run build:release-bundle
+          npm run verify:release-bundle
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: pi-together-release-bundle-${{ github.ref_name }}
+          path: release-bundle/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Create draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft > "$RUNNER_TEMP/release-draft" 2>/dev/null; then
+            test "$(cat "$RUNNER_TEMP/release-draft")" = true
+            gh release upload "$GITHUB_REF_NAME" release-bundle/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release-bundle/* \
+              --draft --verify-tag --title "Pi Together $GITHUB_REF_NAME" --generate-notes
+          fi
+      - name: Publish the exact signed npm archive with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN"
+          version="${GITHUB_REF_NAME#v}"
+          archive="./release-bundle/pi-together-$version.tgz"
+          expected="sha512-$(openssl dgst -sha512 -binary "$archive" | base64 -w0)"
+          if npm view "pi-together@$version" dist.integrity --json > "$RUNNER_TEMP/published-integrity" 2>/dev/null; then
+            actual="$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")))' "$RUNNER_TEMP/published-integrity")"
+            test "$actual" = "$expected"
+          else
+            npm publish "$archive" --provenance --access public
+          fi
+      - name: Publish GitHub release after npm succeeds
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false

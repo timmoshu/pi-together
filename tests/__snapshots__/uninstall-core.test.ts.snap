@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`uninstall lifecycle core > derives one exact public removal sequence while preserving config and backups 1`] = `
+[
+  "stop-oauth",
+  "stop-app",
+  "remove-nginx-enable",
+  "remove-nginx-site",
+  "reload-nginx",
+  "remove-renewal-hook",
+  "remove-oauth-service",
+  "remove-user-management-journal",
+  "remove-oauth-config",
+  "remove-oauth-client-secret",
+  "remove-oauth-cookie-secret",
+  "remove-oauth-helper",
+  "remove-oauth-archive",
+  "remove-app-service",
+  "daemon-reload",
+  "remove-current",
+  "remove-release",
+  "remove-policy-journal",
+]
+`;

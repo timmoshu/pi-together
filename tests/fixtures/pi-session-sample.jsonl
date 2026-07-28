@@ -1,0 +1,6 @@
+{"type":"session","version":3,"id":"sample-0001","timestamp":"2025-01-02T03:04:05.000Z","cwd":"/home/example/projects/atlas"}
+{"type":"session_info","id":"info-0001","parentId":null,"timestamp":"2025-01-02T03:04:05.010Z","name":"sample chat"}
+{"type":"model_change","id":"model-0001","parentId":"info-0001","timestamp":"2025-01-02T03:04:05.020Z","provider":"example-ai","modelId":"example-model"}
+{"type":"thinking_level_change","id":"thinking-0001","parentId":"model-0001","timestamp":"2025-01-02T03:04:05.030Z","thinkingLevel":"off"}
+{"type":"message","id":"user-0001","parentId":"thinking-0001","timestamp":"2025-01-02T03:04:05.040Z","message":{"role":"user","content":[{"type":"text","text":"Reply with exactly: ok"}],"timestamp":1735787045040}}
+{"type":"message","id":"assistant-0001","parentId":"user-0001","timestamp":"2025-01-02T03:04:05.050Z","message":{"role":"assistant","content":[{"type":"text","text":"ok"}],"api":"example-api","provider":"example-ai","model":"example-model","usage":{"input":10,"output":2,"totalTokens":12},"stopReason":"stop","timestamp":1735787045050}}

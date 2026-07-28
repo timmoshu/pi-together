@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   npm-package-dry-run:
-    name: npm package publication dry-run
+    name: npm package archive dry-run
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -17,13 +17,10 @@ jobs:
         with:
           node-version: "22.19.0"
           cache: npm
-      - run: npm install --global --ignore-scripts npm@11.6.2 && test "$(npm --version)" = 11.6.2
       - run: npm ci --include=dev --ignore-scripts
       - run: npm run build
-      - name: Rehearse public package without uploading
-        run: |
-          node -e 'const fs = require("node:fs"); const pkg = JSON.parse(fs.readFileSync("package.json", "utf8")); pkg.private = false; fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")'
-          npm publish --dry-run --access public --ignore-scripts
+      - name: Rehearse the npm archive without uploading
+        run: npm pack --dry-run --ignore-scripts
 
   verify:
     name: Node ${{ matrix.node }}

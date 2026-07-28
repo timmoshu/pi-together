@@ -8,10 +8,10 @@ Pi Together is an independent community project. It is not affiliated with, endo
 
 <p align="center">
   <a href="docs/images/pi-together-dashboard.png">
-    <img src="docs/images/pi-together-dashboard.png" alt="Pi Together desktop dashboard showing shared sessions, model and tool controls, a work trace, and a synthetic conversation" width="1200">
+    <img src="docs/images/pi-together-dashboard.png" alt="Pi Together desktop dashboard showing Alice and Bob collaborating in an attributed session with Bob holding control" width="1200">
   </a>
 </p>
-<p align="center"><sub>Desktop dashboard with synthetic demo identities, repositories, and conversation content.</sub></p>
+<p align="center"><sub>Alice follows Bob's attributed turn after an explicit control transfer. Synthetic demo data shown.</sub></p>
 
 ## Before you install
 

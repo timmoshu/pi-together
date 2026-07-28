@@ -6,6 +6,13 @@ Pi remains the source of truth for models, provider authentication, settings, to
 
 Pi Together is an independent community project. It is not affiliated with, endorsed by, or sponsored by Pi or its maintainers.
 
+<p align="center">
+  <a href="docs/images/pi-together-dashboard.png">
+    <img src="docs/images/pi-together-dashboard.png" alt="Pi Together desktop dashboard showing shared sessions, model and tool controls, a work trace, and a synthetic conversation" width="1200">
+  </a>
+</p>
+<p align="center"><sub>Desktop dashboard with synthetic demo identities, repositories, and conversation content.</sub></p>
+
 ## Before you install
 
 > **Pi Together is a control surface, not a sandbox.** An authorized collaborator can ask Pi to run tools with the service user's host permissions. Use one installation only for people who fully trust one another. Use separate hosts or VMs for mutually untrusted groups.
@@ -26,6 +33,13 @@ See the [threat model](docs/threat-model.md), [deployment security contract](doc
 - Bounded repository discovery beneath owner-approved shared folders, including linked-worktree validation.
 - Guided installation, diagnostics, allowlist/workspace administration, signed upgrades, recovery, and inventory-owned uninstall.
 - Release checksums, SBOM, notices, and third-party license inventory.
+
+<p align="center">
+  <a href="docs/images/pi-together-collaboration-takeover.png">
+    <img src="docs/images/pi-together-collaboration-takeover.png" alt="Pi Together mobile confirmation dialog for explicitly taking control of a shared session" width="320">
+  </a>
+</p>
+<p align="center"><sub>Mutating control transfers only after an explicit takeover confirmation. Synthetic demo data shown.</sub></p>
 
 ## Supported environment
 

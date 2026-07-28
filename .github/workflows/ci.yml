@@ -8,12 +8,9 @@ permissions:
   contents: read
 
 jobs:
-  npm-provenance-dry-run:
-    name: npm provenance publication dry-run
+  npm-package-dry-run:
+    name: npm package publication dry-run
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -23,10 +20,10 @@ jobs:
       - run: npm install --global --ignore-scripts npm@11.6.2 && test "$(npm --version)" = 11.6.2
       - run: npm ci --include=dev --ignore-scripts
       - run: npm run build
-      - name: Rehearse public package and provenance generation without uploading
+      - name: Rehearse public package without uploading
         run: |
           node -e 'const fs = require("node:fs"); const pkg = JSON.parse(fs.readFileSync("package.json", "utf8")); pkg.private = false; fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")'
-          npm publish --dry-run --provenance --access public --ignore-scripts
+          npm publish --dry-run --access public --ignore-scripts
 
   verify:
     name: Node ${{ matrix.node }}

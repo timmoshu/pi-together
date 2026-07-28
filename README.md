@@ -1,6 +1,6 @@
 # Pi Together
 
-Pi Together is a self-hosted browser companion for the [Pi coding agent](https://github.com/earendil-works/pi). It lets a trusted group create, resume, observe, and control native Pi sessions from desktop or mobile.
+Pi Together is a self-hosted, multiplayer, browser-based companion for the [Pi coding agent](https://github.com/earendil-works/pi). It lets a trusted and authenticated group create, resume, observe, and control native Pi sessions from desktop or mobile.
 
 Pi remains the source of truth for models, provider authentication, settings, tools, extensions, workspaces, and native JSONL sessions. Pi Together does not keep a transcript database, collect provider credentials, or edit Pi session files directly.
 

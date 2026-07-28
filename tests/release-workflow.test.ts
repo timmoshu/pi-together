@@ -10,7 +10,9 @@ describe("public release workflow", () => {
     expect(workflow).toContain("contents: write");
     expect(workflow).toContain("id-token: write");
     expect(workflow).toContain("secrets.PI_TOGETHER_RELEASE_KEY");
-    expect(workflow).toContain("secrets.NPM_TOKEN");
+    expect(workflow).toContain("npm@11.6.2");
+    expect(workflow).not.toContain("NPM_TOKEN");
+    expect(workflow).not.toContain("NODE_AUTH_TOKEN");
     expect(workflow).toContain("gh release create");
     expect(workflow).toContain("--draft --verify-tag");
     expect(workflow).toContain('archive="./release-bundle/pi-together-$version.tgz"');

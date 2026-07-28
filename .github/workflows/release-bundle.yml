@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: "22.19.0"
           cache: npm
-          registry-url: https://registry.npmjs.org
+      - run: npm install --global --ignore-scripts npm@11.6.2 && test "$(npm --version)" = 11.6.2
       - run: npm ci --include=dev --ignore-scripts
       - run: npm run typecheck && npm test && npm run build
       - name: Build and verify the signed release bundle
@@ -58,11 +58,8 @@ jobs:
             gh release create "$GITHUB_REF_NAME" release-bundle/* \
               --draft --verify-tag --title "Pi Together $GITHUB_REF_NAME" --generate-notes
           fi
-      - name: Publish the exact signed npm archive with provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish the exact signed npm archive with trusted OIDC provenance
         run: |
-          test -n "$NODE_AUTH_TOKEN"
           version="${GITHUB_REF_NAME#v}"
           archive="./release-bundle/pi-together-$version.tgz"
           expected="sha512-$(openssl dgst -sha512 -binary "$archive" | base64 -w0)"

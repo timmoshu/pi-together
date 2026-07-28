@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: "22.19.0"
           cache: npm
-          registry-url: https://registry.npmjs.org
+      - run: npm install --global --ignore-scripts npm@11.6.2 && test "$(npm --version)" = 11.6.2
       - run: npm ci --include=dev --ignore-scripts
       - run: npm run build
       - name: Rehearse public package and provenance generation without uploading

@@ -20,27 +20,64 @@ function findBinary(root: string): string {
   throw new Error("oauth2-proxy archive did not contain the expected binary");
 }
 
-async function downloadBounded(url: string): Promise<Buffer> {
-  const response = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(60_000) });
-  if (!response.ok) throw new Error(`oauth2-proxy download failed with HTTP ${response.status}`);
-  const maximumBytes = 100 * 1024 * 1024;
-  const declaredLength = Number(response.headers.get("content-length"));
-  if (Number.isFinite(declaredLength) && declaredLength > maximumBytes) throw new Error("oauth2-proxy archive exceeds size limit");
-  if (!response.body) throw new Error("oauth2-proxy download returned no body");
-  const chunks: Uint8Array[] = [];
-  const reader = response.body.getReader();
-  let size = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.length;
-    if (size > maximumBytes) {
-      await reader.cancel();
-      throw new Error("oauth2-proxy archive exceeds size limit");
-    }
-    chunks.push(value);
+interface DownloadOptions {
+  fetchImpl?: typeof fetch;
+  sleep?: (milliseconds: number) => Promise<void>;
+  attempts?: number;
+  timeoutMs?: number;
+}
+
+class TransientDownloadError extends Error {}
+
+function isTransientDownloadError(error: unknown): boolean {
+  return error instanceof TransientDownloadError
+    || error instanceof TypeError
+    || (error instanceof DOMException && ["AbortError", "TimeoutError"].includes(error.name));
+}
+
+export async function downloadBounded(url: string, options: DownloadOptions = {}): Promise<Buffer> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const sleep = options.sleep ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
+  const attempts = options.attempts ?? 3;
+  const timeoutMs = options.timeoutMs ?? 90_000;
+  if (!Number.isInteger(attempts) || attempts < 1 || attempts > 3 || !Number.isInteger(timeoutMs) || timeoutMs < 1_000 || timeoutMs > 120_000) {
+    throw new Error("oauth2-proxy download retry policy is invalid");
   }
-  return Buffer.concat(chunks, size);
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const response = await fetchImpl(url, { redirect: "follow", signal: AbortSignal.timeout(timeoutMs) });
+      if (!response.ok) {
+        if ([408, 425, 429].includes(response.status) || response.status >= 500) {
+          throw new TransientDownloadError(`oauth2-proxy download failed with HTTP ${response.status}`);
+        }
+        throw new Error(`oauth2-proxy download failed with HTTP ${response.status}`);
+      }
+      const maximumBytes = 100 * 1024 * 1024;
+      const declaredLength = Number(response.headers.get("content-length"));
+      if (Number.isFinite(declaredLength) && declaredLength > maximumBytes) throw new Error("oauth2-proxy archive exceeds size limit");
+      if (!response.body) throw new Error("oauth2-proxy download returned no body");
+      const chunks: Uint8Array[] = [];
+      const reader = response.body.getReader();
+      let size = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.length;
+        if (size > maximumBytes) {
+          await reader.cancel();
+          throw new Error("oauth2-proxy archive exceeds size limit");
+        }
+        chunks.push(value);
+      }
+      return Buffer.concat(chunks, size);
+    } catch (error) {
+      lastError = error;
+      if (!isTransientDownloadError(error) || attempt === attempts) throw error;
+      await sleep(attempt === 1 ? 1_000 : 4_000);
+    }
+  }
+  throw lastError;
 }
 
 export async function fetchOauth2Proxy(target: Target, outputPath: string): Promise<void> {

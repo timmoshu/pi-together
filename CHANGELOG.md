@@ -4,7 +4,11 @@ All notable changes to Pi Together are documented here. The project follows [Kee
 
 ## [Unreleased]
 
-## [0.1.1] - 2026-07-28
+### Fixed
+
+- Printed Funnel activation verification progress once instead of repeating the privileged-boundary message for every poll.
+
+## [0.1.1] - 2026-07-29
 
 ### Fixed
 

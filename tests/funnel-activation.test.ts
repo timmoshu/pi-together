@@ -27,6 +27,7 @@ describe("guided Funnel activation", () => {
     expect(confirm).toHaveBeenCalledOnce();
     expect(inspect).toHaveBeenCalledTimes(22);
     expect(output.join("\n")).toContain("Tailscale approval required");
+    expect(output.filter((message) => message.includes("privileged boundary: verifying exact public Funnel activation"))).toHaveLength(1);
     expect(output.join("\n")).toContain("confirming that it remains reachable");
     expect(output.join("\n")).toContain("Public Funnel active");
   });

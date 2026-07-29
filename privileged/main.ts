@@ -65,7 +65,6 @@ try {
     if (request && typeof request === "object" && (request as { action?: unknown }).action === "inspect-funnel-activation") {
       const inspection = FunnelActivationInspectionRequestSchema.parse(request);
       if (Number(process.env.SUDO_UID) !== inspection.invokingUid) throw new Error("Funnel activation inspection identity does not match sudo provenance");
-      process.stderr.write("Pi Together privileged boundary: verifying exact public Funnel activation\n");
       process.stdout.write(`${JSON.stringify(await inspectFunnelActivation(inspection.invokingUid, inspection.dnsName))}\n`);
     } else if (request && typeof request === "object" && (request as { action?: unknown }).action === "inspect-certificate") {
       const inspection = CertificateInspectionRequestSchema.parse(request);

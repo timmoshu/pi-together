@@ -23,6 +23,7 @@ export async function completeFunnelActivation(
   let approved = false;
   let approvalUrl: string | undefined;
   let consecutiveActiveChecks = 0;
+  prompt.write("Pi Together privileged boundary: verifying exact public Funnel activation…\n");
   for (let attempt = 0; attempt < 121; attempt++) {
     const state = FunnelActivationInspectionSchema.parse(await inspectActivation());
     if (state.status === "active") {

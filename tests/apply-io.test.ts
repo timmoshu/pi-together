@@ -97,6 +97,19 @@ describe("root apply filesystem adapter", () => {
     });
   });
 
+  it("does not remove a canonical preserved backup directory that this apply did not create", async () => {
+    const root = await mkdtemp(join(tmpdir(), "pi-together-root-"));
+    const packageRoot = await mkdtemp(join(tmpdir(), "pi-together-package-"));
+    roots.push(root, packageRoot);
+    await mkdir(join(root, "var/lib/pi-together/backups"), { recursive: true, mode: 0o700 });
+    const io = new RootApplyIo({ root, packageRoot, requireRoot: false });
+    await expect(io.rollback({
+      id: "backup-root-directory", kind: "ensure-directory", target: "/var/lib/pi-together/backups", mode: "0700", owner: "root", group: "root",
+      rollback: { kind: "remove-created" },
+    })).resolves.toBeUndefined();
+    expect((await lstat(join(root, "var/lib/pi-together/backups"))).isDirectory()).toBe(true);
+  });
+
   it("does not recursively delete unexpected content while rolling back a created directory", async () => {
     const root = await mkdtemp(join(tmpdir(), "pi-together-root-"));
     const packageRoot = await mkdtemp(join(tmpdir(), "pi-together-package-"));
@@ -233,6 +246,7 @@ describe("root apply filesystem adapter", () => {
     const path = join(root, "etc/pi-together/config.json");
     expect(await readFile(path, "utf8")).toBe(original);
     expect((await lstat(path)).mode & 0o777).toBe(0o640);
+    await expect(lstat(join(root, "var/lib/pi-together/backups"))).rejects.toMatchObject({ code: "ENOENT" });
     await expect(lstat(join(root, `var/tmp/pi-together-apply-${plan.planDigest}.json`))).rejects.toMatchObject({ code: "ENOENT" });
   });
 

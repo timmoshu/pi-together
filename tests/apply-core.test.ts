@@ -248,6 +248,37 @@ describe("narrow privileged apply core", () => {
     expect(io.finished).toBe(1);
   });
 
+  it("accepts only canonical preserved backup directories after config-purged uninstall", async () => {
+    const protectedIo: PlanIo = {
+      ...planIo,
+      inspect: async (path) => path === "/var/lib/pi-together"
+        ? { kind: "directory", mode: 0o750, uid: 0, gid: 0 }
+        : planIo.inspect(path),
+    };
+    const plan = await buildSetupPlan(localAnswers, report, protectedIo);
+    const states = stateMap(plan);
+    states.set("/var/lib/pi-together/backups", { kind: "directory", mode: 0o700, uid: 0, gid: 0 });
+    states.set("/var/lib/pi-together/backups/setup", { kind: "directory", mode: 0o700, uid: 0, gid: 0 });
+    const io = new FakeApplyIo(states);
+    await expect(applyValidated(request(plan), io)).resolves.toBeUndefined();
+    expect(io.prepared).toBe(1);
+
+    const wrongModeStates = stateMap(plan);
+    wrongModeStates.set("/var/lib/pi-together/backups", { kind: "directory", mode: 0o750, uid: 0, gid: 0 });
+    wrongModeStates.set("/var/lib/pi-together/backups/setup", { kind: "directory", mode: 0o700, uid: 0, gid: 0 });
+    const wrongModeIo = new FakeApplyIo(wrongModeStates);
+    await expect(applyValidated(request(plan), wrongModeIo)).rejects.toThrow(/precondition changed/);
+    expect(wrongModeIo.prepared).toBe(0);
+
+    const unsafe = structuredClone(plan);
+    const backup = unsafe.preconditions.find((item) => item.path === "/var/lib/pi-together/backups");
+    if (!backup) throw new Error("fixture missing backup precondition");
+    (backup as unknown as { alternatives: FileState[] }).alternatives = [
+      { kind: "directory", mode: 0o777, uid: 0, gid: 0 },
+    ];
+    expect(() => validateApplyRequest(request(redigest(unsafe)))).toThrow(/alternative precondition/);
+  });
+
   it("uses the larger bounded inspection lane only for reviewed runtime executables", async () => {
     const { local } = await plans();
     const io = new FakeApplyIo(stateMap(local));

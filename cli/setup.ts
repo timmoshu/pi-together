@@ -242,7 +242,7 @@ export async function collectInteractiveAnswers(
 }
 
 export function assertSupportedAccessMode(mode: SetupAnswers["mode"]): void {
-  if (mode === "reverse-proxy") throw new Error("Own Domain is not supported in Pi Together 0.1.0; use Easy Sharing or Local access");
+  if (mode === "reverse-proxy") throw new Error("Own Domain is not supported in Pi Together 0.1.x; use Easy Sharing or Local access");
 }
 
 function assertSupportedAnswers(answers: SetupAnswers): asserts answers is Exclude<SetupAnswers, { mode: "reverse-proxy" }> {

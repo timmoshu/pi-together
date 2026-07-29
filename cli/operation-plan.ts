@@ -61,7 +61,17 @@ export type SetupOperation = z.infer<typeof SetupOperationSchema>;
 type WithoutRollback<T> = T extends unknown ? Omit<T, "rollback"> : never;
 type SetupOperationInput = WithoutRollback<SetupOperation>;
 
-const PreconditionSchema = z.object({ path: AbsolutePath, expected: FileStateSchema }).strict();
+const PreconditionSchema = z.object({
+  path: AbsolutePath,
+  expected: FileStateSchema,
+  alternatives: z.array(FileStateSchema).min(1).max(1).optional(),
+}).strict();
+export type SetupPrecondition = z.infer<typeof PreconditionSchema>;
+
+export function preconditionAccepts(precondition: SetupPrecondition, actual: FileState): boolean {
+  return [precondition.expected, ...(precondition.alternatives ?? [])]
+    .some((candidate) => JSON.stringify(candidate) === JSON.stringify(actual));
+}
 const SecretInputSchema = z.object({
   id: z.enum(["proxy-secret", "oauth-client-secret", "oauth-cookie-secret"]),
   source: z.enum(["answer", "generated-at-apply"]),
@@ -103,6 +113,22 @@ function validatePlanCore(plan: z.infer<typeof PlanCoreBaseSchema>, context: z.R
     }
     if (operation.kind === "write-secret-file" && !declaredSecrets.has(operation.secretId)) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["operations", index, "secretId"], message: "secret file uses an undeclared secret" });
+    }
+  }
+  for (const [index, precondition] of plan.preconditions.entries()) {
+    if (!precondition.alternatives) continue;
+    const operation = plan.operations.find((candidate) => candidate.target === precondition.path);
+    const canonicalBackupDirectory = [
+      "/var/lib/pi-together/backups",
+      "/var/lib/pi-together/backups/setup",
+    ].includes(precondition.path)
+      && operation?.kind === "ensure-directory"
+      && operation.mode === "0700" && operation.owner === "root" && operation.group === "root"
+      && precondition.expected.kind === "absent"
+      && precondition.alternatives.length === 1
+      && JSON.stringify(precondition.alternatives[0]) === JSON.stringify({ kind: "directory", mode: 0o700, uid: 0, gid: 0 });
+    if (!canonicalBackupDirectory) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["preconditions", index, "alternatives"], message: "alternative precondition is not allowlisted" });
     }
   }
 }
@@ -284,7 +310,7 @@ export async function buildSetupPlan(
   const tailscaleState = answers.mode === "tailscale-funnel" ? FileStateSchema.parse(await inspectExecutable("/usr/bin/tailscale")) : undefined;
   if (tailscaleState && (tailscaleState.kind !== "file" || tailscaleState.uid !== 0 || (tailscaleState.mode & 0o022) !== 0)) throw new Error("Tailscale executable metadata is unsafe");
   const operations: SetupOperation[] = [];
-  const preconditions: Array<{ path: string; expected: FileState }> = [
+  const preconditions: SetupPrecondition[] = [
     { path: discovery.facts.node.path, expected: nodeState },
     { path: discovery.facts.piPath, expected: piState },
     ...(tailscaleState ? [{ path: "/usr/bin/tailscale", expected: tailscaleState }] : []),
@@ -363,7 +389,18 @@ export async function buildSetupPlan(
     if (["write-file", "write-secret-file", "download", "extract-oauth2-proxy", "symlink"].includes(operation.kind) && state.kind === "directory") {
       throw new Error(`file target is an existing directory: ${operation.target}`);
     }
-    preconditions.push({ path: operation.target, expected: state });
+    const ambiguousPreservedBackup = state.kind === "absent"
+      && preservedMode === undefined
+      && states.get("/var/lib/pi-together")?.kind === "directory"
+      && ["/var/lib/pi-together/backups", "/var/lib/pi-together/backups/setup"].includes(operation.target)
+      && operation.kind === "ensure-directory";
+    preconditions.push({
+      path: operation.target,
+      expected: state,
+      ...(ambiguousPreservedBackup
+        ? { alternatives: [{ kind: "directory" as const, mode: 0o700, uid: 0, gid: 0 }] }
+        : {}),
+    });
     const rollback = operation.kind === "service"
       ? { kind: "service-action" as const, action: operation.action === "enable-start" ? "disable-stop" as const : operation.action === "enable" ? "disable" as const : operation.action === "start" ? "stop" as const : operation.action === "reload" ? "reload" as const : "none" as const }
       : operation.kind === "certificate" ? { kind: "delete-certificate" as const, domain: operation.domain }

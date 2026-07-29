@@ -220,9 +220,11 @@ only managed integration entries and bounded immutable releases. It always prese
 - unrelated nginx sites and systemd units;
 - Pi Together backups.
 
-Pi Together config is preserved unless `--purge-config` is explicitly supplied and confirmed. Repeating
-uninstall after completion succeeds without mutation only after the root boundary verifies that the bounded
-set of canonical managed integration markers is absent.
+Pi Together config is preserved unless `--purge-config` is explicitly supplied and confirmed. Backups remain
+preserved even with config purge. A later setup accepts the backup root and setup-backup directory only when
+each is either absent or an exact root-owned mode-0700 directory; every other type, owner, or mode fails closed.
+Repeating uninstall after completion succeeds without mutation only after the root boundary verifies that the
+bounded set of canonical managed integration markers is absent.
 
 ## Recovery and rollback
 

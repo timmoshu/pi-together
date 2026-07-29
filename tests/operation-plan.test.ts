@@ -188,8 +188,16 @@ describe("typed setup operation plan", () => {
       return inspect(path);
     };
     const plan = await buildSetupPlan(funnelAnswers, report(), io);
-    expect(plan.preconditions).toContainEqual({ path: "/var/lib/pi-together/backups", expected: { kind: "absent" } });
-    expect(plan.preconditions).toContainEqual({ path: "/var/lib/pi-together/backups/setup", expected: { kind: "absent" } });
+    expect(plan.preconditions).toContainEqual({
+      path: "/var/lib/pi-together/backups",
+      expected: { kind: "absent" },
+      alternatives: [{ kind: "directory", mode: 0o700, uid: 0, gid: 0 }],
+    });
+    expect(plan.preconditions).toContainEqual({
+      path: "/var/lib/pi-together/backups/setup",
+      expected: { kind: "absent" },
+      alternatives: [{ kind: "directory", mode: 0o700, uid: 0, gid: 0 }],
+    });
     expect(plan.preconditions).toContainEqual({
       path: "/var/lib/pi-together/downloads",
       expected: { kind: "directory", mode: 0o700, uid: 0, gid: 0 },

@@ -74,9 +74,12 @@ retaining the oauth2-proxy/backend trust model. Own Domain is not supported in 0
 installation selects and displays the first available literal-loopback listener from a small fixed port set,
 then rechecks it at the privileged boundary; it never broadens the bind address. Setup verifies requested
 systemd state and authenticated private health before success. Root-only apply journals retain the validated
-secret-free plan for cross-invocation rollback. Explicit recovery inventories one exact journal and dispatches
-only its allowlisted rollback after confirmation. Uninstall records durable exact prefixes and keeps its
-manifest until the final restart-safe deletion. Setup installs
+secret-free plan for cross-invocation rollback, including the exact set of directories created by that apply.
+Rollback removes an empty directory only when the journal proves that transaction created it. After an explicit
+config purge, setup's only alternative preconditions are the two canonical root-owned mode-0700 backup
+directories that uninstall always preserves; all other metadata still fails closed. Explicit recovery
+inventories one exact journal and dispatches only its allowlisted rollback after confirmation. Uninstall records
+durable exact prefixes and keeps its manifest until the final restart-safe deletion. Setup installs
 an immutable host release and the reviewed systemd/nginx/oauth2-proxy integration; npm lifecycle scripts
 never deploy as root. Signed upgrades accept only a newer stable version whose release bundle binds the
 version tag, source commit, package digest, and release-manifest digest. Every version receives a distinct

@@ -1,6 +1,6 @@
 {
   "name": "pi-together",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "license": "MIT",
   "description": "An independent Pi companion for trusted, self-hosted browser collaboration on native coding-agent sessions.",

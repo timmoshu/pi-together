@@ -43,7 +43,7 @@ See the [threat model](docs/threat-model.md), [deployment security contract](doc
 
 ## Supported environment
 
-Pi Together 0.1.0 supports:
+Pi Together 0.1.x supports:
 
 - Ubuntu 24.04 on amd64 (the tested and supported 0.1.x platform);
 - Node.js 22.19 or newer;

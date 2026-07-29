@@ -6,7 +6,7 @@ import {
 } from "node:fs/promises";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
-import { SetupPlanSchema, type FileState, type SetupOperation, type SetupPlan } from "../cli/operation-plan.js";
+import { preconditionAccepts, SetupPlanSchema, type FileState, type SetupOperation, type SetupPlan } from "../cli/operation-plan.js";
 import type { ApplyIo, ValidatedApply } from "./apply-core.js";
 import { resolvePrivilegedPath } from "./root-path.js";
 import { availableLoopbackPort } from "../shared/local-listener.js";
@@ -17,7 +17,7 @@ import { inspectCertificateLineage } from "./certificate-inventory.js";
 import { inspectBoundedTree, reviewedDirectoryPaths } from "./bounded-tree.js";
 import { syncDirectory, syncFile, writeFileExclusive } from "./fs-durability.js";
 import { certbotArguments } from "./certbot.js";
-
+import { validatedCreatedDirectories } from "./apply-created-directories.js";
 export { certbotArguments } from "./certbot.js";
 export interface CommandRunner {
   (file: string, args: string[]): Promise<void>;
@@ -46,14 +46,7 @@ const defaultCommand: CommandRunner = async (file, args) => {
 };
 
 class BeforeMutationError extends Error {}
-
-function sha256(value: Buffer): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-function sameState(left: FileState, right: FileState): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
-}
-
+function sha256(value: Buffer): string { return createHash("sha256").update(value).digest("hex"); }
 export class RootApplyIo implements ApplyIo {
   private readonly root: string;
   private readonly command: CommandRunner;
@@ -63,6 +56,7 @@ export class RootApplyIo implements ApplyIo {
   private daemonReloaded = true;
   private nginxReloadNeededOnAbort = false;
   private readonly packagesInstalledByApply = new Set<string>();
+  private readonly createdDirectories = new Set<string>();
   private readonly reviewedArtifacts = new Map<string, string>();
   private readonly backupMetadata = new Map<string, { mode: number; uid: number; gid: number }>();
   private journal?: {
@@ -74,6 +68,7 @@ export class RootApplyIo implements ApplyIo {
     backupMetadata: Record<string, { mode: number; uid: number; gid: number }>;
     packagesInstalledByApply: string[];
     temporaryPaths: string[];
+    createdDirectories?: string[];
   };
 
   constructor(private readonly options: RootApplyOptions) {
@@ -123,15 +118,12 @@ export class RootApplyIo implements ApplyIo {
     }
   }
 
-  private expected(path: string): FileState {
-    const expected = this.validated?.plan.preconditions.find((item) => item.path === path)?.expected;
-    if (!expected) throw new BeforeMutationError(`operation target has no reviewed precondition: ${path}`);
-    return expected;
-  }
-
   private async recheckFirstTouch(path: string): Promise<void> {
     if (this.touched.has(path)) return;
-    if (!sameState(await this.inspect(path), this.expected(path))) throw new BeforeMutationError(`target changed after preflight: ${path}`);
+    const precondition = this.validated?.plan.preconditions.find((item) => item.path === path);
+    if (!precondition || !preconditionAccepts(precondition, await this.inspect(path))) {
+      throw new BeforeMutationError(`target changed after preflight: ${path}`);
+    }
     this.touched.add(path);
   }
 
@@ -249,6 +241,7 @@ export class RootApplyIo implements ApplyIo {
     if (!this.journal) return;
     this.journal.backupMetadata = Object.fromEntries(this.backupMetadata);
     this.journal.packagesInstalledByApply = [...this.packagesInstalledByApply].sort();
+    this.journal.createdDirectories = [...this.createdDirectories].sort();
     const path = this.journalPath(this.journal.planDigest);
     await mkdir(dirname(path), { recursive: true, mode: 0o700 });
     const temp = `${path}.${process.pid}.tmp`;
@@ -292,6 +285,7 @@ export class RootApplyIo implements ApplyIo {
     }
     this.backupMetadata.clear();
     this.packagesInstalledByApply.clear();
+    this.createdDirectories.clear();
     const path = this.journalPath(validated.plan.planDigest);
     let data: Buffer;
     try {
@@ -325,6 +319,7 @@ export class RootApplyIo implements ApplyIo {
       this.backupMetadata.set(key, metadata);
     }
     for (const name of parsed.packagesInstalledByApply ?? []) this.packagesInstalledByApply.add(name);
+    for (const path of validatedCreatedDirectories(parsed.createdDirectories, parsed.plan)) this.createdDirectories.add(path);
     for (const temporary of parsed.temporaryPaths ?? []) {
       const insideRoot = this.root === "/" ? temporary.startsWith("/") : temporary.startsWith(`${this.root}/`);
       if (!insideRoot || !basename(temporary).startsWith(".pi-together-")) {
@@ -489,6 +484,7 @@ export class RootApplyIo implements ApplyIo {
       backupMetadata: {},
         packagesInstalledByApply: [],
       temporaryPaths: [],
+      createdDirectories: [],
     };
     await this.saveJournal();
   }
@@ -507,6 +503,8 @@ export class RootApplyIo implements ApplyIo {
         try {
           await mkdir(target, { recursive: false, mode: Number.parseInt(operation.mode, 8) });
           created = true;
+          this.createdDirectories.add(operation.target);
+          await this.saveJournal();
         } catch (error) {
           if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
         }
@@ -676,10 +674,13 @@ export class RootApplyIo implements ApplyIo {
     switch (operation.rollback.kind) {
       case "remove-created":
         if (operation.kind === "ensure-directory") {
+          if (!this.createdDirectories.has(operation.target)) break;
           try { await rmdir(this.path(operation.target)); }
           catch (error) {
             if (!["ENOENT", "ENOTEMPTY", "EEXIST"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error;
           }
+          this.createdDirectories.delete(operation.target);
+          await this.saveJournal();
         } else {
           await rm(this.path(operation.target), { recursive: operation.kind === "copy-release", force: true });
         }
@@ -751,6 +752,7 @@ export class RootApplyIo implements ApplyIo {
     }
     await this.clearJournal(validated.plan.planDigest);
     this.journal = undefined;
+    this.createdDirectories.clear();
   }
 
   private async verifyHealth(config: AppConfig): Promise<void> {

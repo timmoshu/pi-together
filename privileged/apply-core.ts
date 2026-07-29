@@ -1,7 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { normalize } from "node:path";
 import { z } from "zod";
-import { RUNTIME_EXECUTABLE_LIMIT, SetupPlanSchema, type FileState, type SetupOperation, type SetupPlan } from "../cli/operation-plan.js";
+import { preconditionAccepts, RUNTIME_EXECUTABLE_LIMIT, SetupPlanSchema, type FileState, type SetupOperation, type SetupPlan } from "../cli/operation-plan.js";
 import { renderAppService, renderFunnelEdgeService, renderFunnelService, renderOauth2ProxyService, renderRenewalHook } from "../deployment/service-templates.js";
 import { OAUTH2_PROXY_RELEASE, renderDeploymentTemplates, renderNginxChallengeSite, renderNginxFunnelEdge } from "../deployment/templates.js";
 import { AppConfigSchema } from "../server/config.js";
@@ -49,10 +49,6 @@ export interface ApplyIo {
 
 function sha256(value: string | Buffer): string {
   return createHash("sha256").update(value).digest("hex");
-}
-
-function equalState(left: FileState, right: FileState): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 function fixedHashEqual(actual: string, expected: string): boolean {
@@ -545,7 +541,7 @@ export async function applyValidated(requestValue: unknown, io: ApplyIo): Promis
       precondition.path,
       validated.runtimeExecutables.has(precondition.path) ? RUNTIME_EXECUTABLE_LIMIT : undefined,
     );
-    if (!equalState(actual, precondition.expected)) throw new Error(`precondition changed: ${precondition.path}`);
+    if (!preconditionAccepts(precondition, actual)) throw new Error(`precondition changed: ${precondition.path}`);
   }
   if (validated.localPort !== undefined && !await io.localPortAvailable(validated.localPort)) {
     throw new Error(`selected local port is no longer available: ${validated.localPort}`);

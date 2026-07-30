@@ -1,4 +1,6 @@
-export const PI_COMPATIBILITY = ">=0.82.0 <0.83.0";
+export const PI_COMPATIBILITY = ">=0.82.0 <0.84.0";
+/** Recommended install pin; the supported runtime range may include older patch lines. */
+export const PI_PACKAGE_SPEC = "@earendil-works/pi-coding-agent@0.83";
 
 export interface ParsedPiVersion { major: number; minor: number; patch: number }
 
@@ -12,5 +14,5 @@ export function parsePiVersion(output: string): ParsedPiVersion | null {
 
 export function supportsPiVersion(output: string): boolean {
   const version = parsePiVersion(output);
-  return !!version && version.major === 0 && version.minor === 82;
+  return !!version && version.major === 0 && (version.minor === 82 || version.minor === 83);
 }

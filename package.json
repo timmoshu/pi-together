@@ -1,6 +1,6 @@
 {
   "name": "pi-together",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "license": "MIT",
   "description": "An independent Pi companion for trusted, self-hosted browser collaboration on native coding-agent sessions.",
@@ -55,7 +55,7 @@
   "engines": {
     "node": ">=22.19.0"
   },
-  "piCompatibility": ">=0.82.0 <0.83.0",
+  "piCompatibility": ">=0.82.0 <0.84.0",
   "scripts": {
     "dev": "tsx watch server/index.ts",
     "dev:client": "vite",

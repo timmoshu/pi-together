@@ -7,7 +7,7 @@
 | 0.1.x | Yes |
 | Earlier/private builds | No |
 
-Pi Together 0.1.x supports Node.js `>=22.19.0`, Pi `>=0.82.0 <0.83.0`, and Ubuntu 24.04 on amd64. Other modern systemd-based Linux distributions may work but are untested and unsupported. Arm64 and Own Domain deployment are not supported in 0.1.x.
+Pi Together 0.1.x supports Node.js `>=22.19.0`, Pi `>=0.82.0 <0.84.0`, and Ubuntu 24.04 on amd64. Other modern systemd-based Linux distributions may work but are untested and unsupported. Arm64 and Own Domain deployment are not supported in 0.1.x.
 
 ## Reporting a vulnerability
 

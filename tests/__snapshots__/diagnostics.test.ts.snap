@@ -16,7 +16,7 @@ exports[`operational diagnostics > keeps the complete failure/remediation catalo
   },
   {
     "code": "PTD-PI-VERSION",
-    "remediation": "Install a Pi version in the supported range >=0.82.0 <0.83.0.",
+    "remediation": "Install a Pi version in the supported range >=0.82.0 <0.84.0.",
     "status": "fail",
     "summary": "Installed Pi version is unsupported or invalid.",
   },
@@ -111,7 +111,7 @@ exports[`operational diagnostics > renders stable healthy human and JSON doctor 
     {
       "code": "PTD-PI-VERSION",
       "status": "pass",
-      "summary": "Pi 0.82.0 is supported.",
+      "summary": "Pi 0.83.0 is supported.",
     },
     {
       "code": "PTD-PI-MODELS",
@@ -183,7 +183,7 @@ exports[`operational diagnostics > renders stable healthy human and JSON doctor 
 "Pi Together doctor: PASS
 PASS  PTD-CONFIG  Configuration schema and mode-0600 ownership verified.
 PASS  PTD-RELEASE  Release 0.1.0 integrity verified.
-PASS  PTD-PI-VERSION  Pi 0.82.0 is supported.
+PASS  PTD-PI-VERSION  Pi 0.83.0 is supported.
 PASS  PTD-PI-MODELS  Pi reports at least one offline model entry.
 PASS  PTD-WORKSPACES  1 shared repository folder(s) verified.
 PASS  PTD-IDENTITY  Due GitHub numeric principal mappings were refreshed and unchanged.

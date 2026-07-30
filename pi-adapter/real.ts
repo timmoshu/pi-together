@@ -1,6 +1,6 @@
 // pi-adapter/real.ts — live adapter over the pi agent.
 //
-// READ path (validated against pi 0.81.1): session jsonl under ~/.pi/agent/sessions/<project>/*.jsonl,
+// READ path (session shape rechecked against pi 0.83.0): session jsonl under ~/.pi/agent/sessions/<project>/*.jsonl,
 // parsed by normalize.ts and keyed by the header session id.
 // CONTROL path: mutating ops + the live agent-run loop drive a `pi --mode rpc` runtime per session
 // (pi-adapter/runtime.ts):

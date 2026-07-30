@@ -14,6 +14,7 @@ import {
   type PiPrerequisite,
   type ProbeIo,
 } from "./discovery.js";
+import { PI_COMPATIBILITY } from "./pi-version.js";
 import { buildSetupPlan, nodePlanIo, renderSetupPlan, type PlanIo, type SetupPlan } from "./operation-plan.js";
 import {
   loadSecureAnswers,
@@ -251,7 +252,7 @@ function assertSupportedAnswers(answers: SetupAnswers): asserts answers is Exclu
 
 function piPrerequisiteMessage(pi: PiPrerequisite): string {
   if (pi.status === "missing") return `Pi is required before Pi Together setup.\nInstall the compatible Pi line as your normal user:\n  ${PI_INSTALL_COMMAND}\nThen run pi, use /login to configure a provider, and rerun this command.`;
-  if (pi.status === "unsupported") return `Pi ${pi.version ?? "version unknown"} is incompatible; Pi Together requires >=0.82.0 <0.83.0.\nInstall the compatible line with:\n  ${PI_INSTALL_COMMAND}`;
+  if (pi.status === "unsupported") return `Pi ${pi.version ?? "version unknown"} is incompatible; Pi Together requires ${PI_COMPATIBILITY}.\nInstall the compatible line with:\n  ${PI_INSTALL_COMMAND}`;
   if (pi.status === "no-models") return "Pi is installed, but no configured models are available. Run pi, use /login to configure a provider, verify /model, and rerun this command.";
   return "Pi could not be probed safely. Verify that pi --version and pi --offline --no-extensions --no-skills --no-prompt-templates --list-models work, then rerun setup.";
 }

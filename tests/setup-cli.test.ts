@@ -58,7 +58,7 @@ const io: ProbeIo = {
   exec: async (file, args) => {
     if (file === "which" && args[0] === "pi") return { stdout: "/usr/bin/pi\n", stderr: "" };
     if (file === "which") throw new Error("not installed");
-    if (file === "/usr/bin/pi" && args[0] === "--version") return { stdout: "0.82.0\n", stderr: "" };
+    if (file === "/usr/bin/pi" && args[0] === "--version") return { stdout: "0.83.0\n", stderr: "" };
     if (file === "/usr/bin/pi") return { stdout: "provider model\nexample model\n", stderr: "" };
     if (file === "ss") return { stdout: "", stderr: "" };
     if (file === "timedatectl") return { stdout: "yes\n", stderr: "" };
@@ -290,7 +290,7 @@ describe("setup CLI", () => {
     };
     await expect(runSetup(["--dry-run"], prompt, missingPiIo, planIo)).rejects.toThrow(/Pi is required/);
     expect(prompt.textCalls).toBe(0);
-    expect(prompt.output).toContain("npm install --global --prefix \"$HOME/.local\" --ignore-scripts @earendil-works/pi-coding-agent@0.82");
+    expect(prompt.output).toContain("npm install --global --prefix \"$HOME/.local\" --ignore-scripts @earendil-works/pi-coding-agent@0.83");
     expect(prompt.output).toContain("No answers or secrets were collected");
   });
 

@@ -26,7 +26,7 @@ function fakeIo(overrides: Partial<ProbeIo> = {}) {
         if (args[0] === "nginx") return { stdout: "/usr/sbin/nginx\n", stderr: "" };
       }
       if (file === "/usr/bin/node" && args[0] === "--version") return { stdout: "v22.19.0\n", stderr: "" };
-      if (file === "/opt/node/bin/pi" && args[0] === "--version") return { stdout: "0.82.0\n", stderr: "" };
+      if (file === "/opt/node/bin/pi" && args[0] === "--version") return { stdout: "0.83.0\n", stderr: "" };
       if (file === "/opt/node/bin/pi" && args.includes("--list-models")) return { stdout: "provider model\nexample model-a\n", stderr: "" };
       if (file === "/usr/sbin/nginx") return { stdout: "", stderr: "nginx version: nginx/1.24.0" };
       if (file === "ss") return { stdout: "", stderr: "" };

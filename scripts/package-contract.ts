@@ -3,6 +3,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
+import { PI_COMPATIBILITY } from "../cli/pi-version.js";
 
 interface PackResult { filename: string; files: Array<{ path: string; mode: number }> }
 interface Manifest {
@@ -73,7 +74,7 @@ try {
   if (manifest.schemaVersion !== 1 || manifest.package.name !== "pi-together" || manifest.package.license !== "MIT") {
     throw new Error("invalid release manifest identity or license");
   }
-  if (manifest.runtime.pi !== ">=0.82.0 <0.83.0") throw new Error("unexpected Pi compatibility range");
+  if (manifest.runtime.pi !== PI_COMPATIBILITY) throw new Error("unexpected Pi compatibility range");
   if (manifest.supportedTargets.join(",") !== "linux-x64" || manifest.experimentalTargets.join(",") !== "linux-arm64") {
     throw new Error("unexpected supported/experimental target matrix");
   }

@@ -4,6 +4,7 @@ import { access } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { nodeProbeIo, PI_INSTALL_COMMAND, probePiPrerequisite, type PiPrerequisite } from "./discovery.js";
+import { PI_COMPATIBILITY, PI_PACKAGE_SPEC } from "./pi-version.js";
 import { runSetup, TerminalPrompter, type SetupPrompter } from "./setup.js";
 import { canonicalOwnerHome } from "./owner-home.js";
 import { RepositoryDiscovery, type FolderCandidate } from "../server/workspace-policy.js";
@@ -27,7 +28,7 @@ export function piInstallArguments(prefix: string): string[] {
   if (!isAbsolute(prefix) || prefix === "/" || CONTROLS.test(prefix)) throw new Error("user npm prefix is unsafe");
   return [
     "install", "--global", "--prefix", prefix, "--ignore-scripts", "--no-audit", "--no-fund",
-    "@earendil-works/pi-coding-agent@0.82",
+    PI_PACKAGE_SPEC,
   ];
 }
 
@@ -58,7 +59,7 @@ export const nodeOnboardingIo: OnboardingIo = {
 function statusText(pi: PiPrerequisite): string {
   if (pi.status === "ready") return `Pi ${pi.version} is ready with ${pi.modelCount} configured model entr${pi.modelCount === 1 ? "y" : "ies"}.`;
   if (pi.status === "missing") return "Pi is not installed or is not on PATH.";
-  if (pi.status === "unsupported") return `Pi ${pi.version ?? "version unknown"} is not in the supported >=0.82.0 <0.83.0 range.`;
+  if (pi.status === "unsupported") return `Pi ${pi.version ?? "version unknown"} is not in the supported ${PI_COMPATIBILITY} range.`;
   if (pi.status === "no-models") return `Pi ${pi.version} is installed, but no configured model is available.`;
   return "Pi is installed but its version/model readiness probe failed.";
 }

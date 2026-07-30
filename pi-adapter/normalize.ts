@@ -1,6 +1,6 @@
 // pi-adapter/normalize.ts — turn a pi session jsonl into the shared protocol shape.
 //
-// Validated 2026-07-23 against a real pi 0.81.1 session (see tests/fixtures/pi-session-sample.jsonl).
+// Validated against pi session JSONL (fixture from 0.81.1; shape rechecked against 0.83.0).
 // pi records are typed lines: `session` (header: version/id/cwd), `session_info` (name),
 // `model_change`, `thinking_level_change`, and `message` (nested `{role, content[], timestamp}`).
 // A session file is a transcript only — it carries no run status; the live status ("running"/

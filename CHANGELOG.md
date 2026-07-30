@@ -4,6 +4,12 @@ All notable changes to Pi Together are documented here. The project follows [Kee
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-07-30
+
+### Changed
+
+- Widened Pi compatibility to `>=0.82.0 <0.84.0` after rechecking the 0.83 release (RPC/session surfaces unchanged for Pi Together). Onboarding still recommends `@earendil-works/pi-coding-agent@0.83`; existing 0.82 installs remain accepted.
+
 ### Fixed
 
 - Printed Funnel activation verification progress once instead of repeating the privileged-boundary message for every poll.
@@ -36,6 +42,7 @@ All notable changes to Pi Together are documented here. The project follows [Kee
 - Privileged lifecycle operations use fixed typed requests, independent validation, atomic writes, durable journals, bounded reads, health checks, and rollback.
 - Pi Together remains a trusted-group control surface rather than an operating-system sandbox.
 
-[Unreleased]: https://github.com/timmoshu/pi-together/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/timmoshu/pi-together/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/timmoshu/pi-together/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/timmoshu/pi-together/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/timmoshu/pi-together/releases/tag/v0.1.0

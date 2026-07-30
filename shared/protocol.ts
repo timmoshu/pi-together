@@ -1,7 +1,7 @@
 // shared/protocol.ts — the wire contract shared by the server, the client, and both adapters.
 // Reconstructed 2026-07-23; extended 2026-07-23 with the live agent-run loop (send/steer/stop,
 // streamed text/thinking/tool deltas, model+thinking+tool controls). Shapes are grounded in the
-// pi 0.81.1 rpc protocol (docs/rpc.md): message_update.assistantMessageEvent deltas,
+// pi rpc protocol (docs/rpc.md; rechecked against 0.83.0): message_update.assistantMessageEvent deltas,
 // tool_execution_* events, queue_update, agent_settled, get_available_models, set_model, etc.
 import { z } from "zod";
 

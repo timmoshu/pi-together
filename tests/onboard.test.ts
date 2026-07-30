@@ -30,7 +30,7 @@ describe("guided onboarding", () => {
     expect(userNpmPrefix("/home/example")).toBe("/home/example/.local");
     expect(piInstallArguments("/home/example/.local")).toEqual([
       "install", "--global", "--prefix", "/home/example/.local", "--ignore-scripts", "--no-audit", "--no-fund",
-      "@earendil-works/pi-coding-agent@0.82",
+      "@earendil-works/pi-coding-agent@0.83",
     ]);
     expect(() => userNpmPrefix("/")).toThrow(/not safe/);
     expect(() => piInstallArguments("relative")).toThrow(/unsafe/);
@@ -48,7 +48,7 @@ describe("guided onboarding", () => {
   it("continues directly to deployment planning when Pi is ready", async () => {
     const events: string[] = [];
     const prompt = new Prompt([true]);
-    const ready: PiPrerequisite = { status: "ready", piPath: "/usr/bin/pi", version: "0.82.0", modelCount: 1 };
+    const ready: PiPrerequisite = { status: "ready", piPath: "/usr/bin/pi", version: "0.83.0", modelCount: 1 };
     expect(await runOnboarding(prompt, sequence([ready], events), async () => { events.push("setup"); })).toBe(true);
     expect(events).toEqual(["setup"]);
     expect(prompt.output).toContain("[1/3] Check Pi");
@@ -63,7 +63,7 @@ describe("guided onboarding", () => {
   it("passes detected workspace choices into deployment planning", async () => {
     const events: string[] = [];
     const prompt = new Prompt([true]);
-    const ready: PiPrerequisite = { status: "ready", piPath: "/usr/bin/pi", version: "0.82.0", modelCount: 1 };
+    const ready: PiPrerequisite = { status: "ready", piPath: "/usr/bin/pi", version: "0.83.0", modelCount: 1 };
     const candidate = { folder: "/home/example/cc-sandbox", repositoryCount: 1, truncated: false };
     const io: OnboardingIo = { ...sequence([ready], events), detectWorkspaceCandidates: async () => [candidate] };
     expect(await runOnboarding(prompt, io, async (_active, _pi, candidates) => {
@@ -78,8 +78,8 @@ describe("guided onboarding", () => {
     const prompt = new Prompt([true, true, true]);
     const states: PiPrerequisite[] = [
       { status: "missing" },
-      { status: "no-models", piPath: "/home/example/.local/bin/pi", version: "0.82.4", modelCount: 0 },
-      { status: "ready", piPath: "/home/example/.local/bin/pi", version: "0.82.4", modelCount: 2 },
+      { status: "no-models", piPath: "/home/example/.local/bin/pi", version: "0.83.4", modelCount: 0 },
+      { status: "ready", piPath: "/home/example/.local/bin/pi", version: "0.83.4", modelCount: 2 },
     ];
     expect(await runOnboarding(prompt, sequence(states, events), async () => { events.push("setup"); })).toBe(true);
     expect(events).toEqual(["install", "login:/home/example/.local/bin/pi", "setup"]);

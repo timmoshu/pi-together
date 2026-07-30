@@ -1,6 +1,6 @@
 # Support policy
 
-Pi Together 0.1.x supports Ubuntu 24.04 on amd64 with Node.js `>=22.19.0` and Pi `>=0.82.0 <0.83.0`. Other modern systemd-based Linux distributions may work but are untested and unsupported.
+Pi Together 0.1.x supports Ubuntu 24.04 on amd64 with Node.js `>=22.19.0` and Pi `>=0.82.0 <0.84.0`. Other modern systemd-based Linux distributions may work but are untested and unsupported.
 
 Before requesting help:
 

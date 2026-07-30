@@ -4,7 +4,7 @@ import { arch, platform } from "node:process";
 import { promisify } from "node:util";
 import { resolve4, resolve6 } from "node:dns/promises";
 import { availableLoopbackPort, LOCAL_LISTENER_PORTS } from "../shared/local-listener.js";
-import { PI_COMPATIBILITY, supportsPiVersion } from "./pi-version.js";
+import { PI_COMPATIBILITY, PI_PACKAGE_SPEC, supportsPiVersion } from "./pi-version.js";
 
 export type CheckStatus = "pass" | "warn" | "fail";
 export interface DiscoveryCheck { id: string; status: CheckStatus; summary: string; detail?: string }
@@ -29,7 +29,7 @@ export interface PiPrerequisite {
   version?: string;
   modelCount?: number;
 }
-export const PI_INSTALL_COMMAND = "npm install --global --prefix \"$HOME/.local\" --ignore-scripts @earendil-works/pi-coding-agent@0.82";
+export const PI_INSTALL_COMMAND = `npm install --global --prefix "$HOME/.local" --ignore-scripts ${PI_PACKAGE_SPEC}`;
 
 export interface ProbeIo {
   platform(): string;

@@ -42,7 +42,7 @@ function fixture(failure?: string, workspaceMode = 0o750): DiagnosticIo {
       return path.endsWith("/previous") ? "/opt/pi-together/releases/0.0.9" : "/opt/pi-together/releases/0.1.0";
     },
     exec: async (file, args) => {
-      if (file === "pi" && args[0] === "--version") return { stdout: failure === "PTD-PI-VERSION" ? "9.9.9 version-secret-canary\n" : "0.82.0 version-secret-canary\n", stderr: "" };
+      if (file === "pi" && args[0] === "--version") return { stdout: failure === "PTD-PI-VERSION" ? "9.9.9 version-secret-canary\n" : "0.83.0 version-secret-canary\n", stderr: "" };
       if (file === "pi") {
         if (failure === "PTD-PI-MODELS") return { stdout: "", stderr: "model-secret-canary" };
         return { stdout: "provider model\n", stderr: "" };
@@ -110,7 +110,7 @@ describe("operational diagnostics", () => {
           };
         }
         if (file === "/opt/node/bin/node" && args[0] === "/opt/node/lib/pi.js" && args[1] === "--version") {
-          return { stdout: "0.82.0\n", stderr: "" };
+          return { stdout: "0.83.0\n", stderr: "" };
         }
         if (file === "/opt/node/bin/node" && args[0] === "/opt/node/lib/pi.js") {
           return { stdout: "provider model\nexample model-a\n", stderr: "" };

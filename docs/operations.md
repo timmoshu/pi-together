@@ -6,9 +6,9 @@ same non-root user that owns the Pi sessions. Never run npm or package lifecycle
 ## Before setup
 
 - Node.js 22.19 or newer is available to the invoking user. It may come from a user version manager such as NVM; onboarding warns but does not fail when `/usr/bin/node` is older, and it never replaces system Node.
-- Pi `>=0.82.0 <0.83.0` is installed for the same non-root user and has at least one configured model.
+- Pi `>=0.82.0 <0.84.0` is installed for the same non-root user and has at least one configured model.
   Pi Together does not install Pi or configure provider credentials. If needed, run
-  `npm install --global --prefix "$HOME/.local" --ignore-scripts @earendil-works/pi-coding-agent@0.82`, add `$HOME/.local/bin` to the invoking shell's `PATH`, start `pi`, and use `/login`
+  `npm install --global --prefix "$HOME/.local" --ignore-scripts @earendil-works/pi-coding-agent@0.83`, add `$HOME/.local/bin` to the invoking shell's `PATH`, start `pi`, and use `/login`
   before running setup. If Pi is installed outside `PATH`, invoke setup with an absolute
   `PI_BIN=/path/to/pi`; the discovered exact path is recorded in the service unit.
 - Easy Sharing requires a Tailscale account/tailnet, a manually created GitHub OAuth application, and an
